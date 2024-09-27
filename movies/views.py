@@ -1,11 +1,13 @@
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework import generics
 from movies.models import Movie
 from movies.serializers import MovieSerializer
 
 class MovieListCreateView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     
@@ -21,6 +23,7 @@ class MovieListCreateView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class MovieRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     
