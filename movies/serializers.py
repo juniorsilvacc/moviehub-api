@@ -3,6 +3,8 @@ from rest_framework import serializers
 from movies.models import Movie
 from genres.models import Genre
 from actors.models import Actor
+from genres.serializers import GenreSerializer
+from actors.serializers import ActorSerializer
 
 
 # Serializar Manual
@@ -43,3 +45,20 @@ class MovieSerializer(serializers.ModelSerializer):
         if len(value) > 200:
             raise serializers.ValidationError('Resumo não deve maior do que 200 caracteres.')
         return value
+
+
+class MovieListDetailSerializer(serializers.ModelSerializer):
+    actors = ActorSerializer(many=True)
+    genre = GenreSerializer()
+    rate = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Movie
+        fields = ['id', 'title', 'genre', 'actors', 'release_date', 'rate', 'resume']
+
+    def get_rate(self, obj):
+        rate = obj.reviews.aggregate(Avg('stars'))['stars__avg']
+
+        if rate:
+            return rate
+        return None

@@ -1,10 +1,9 @@
 from django.db.models import Count, Avg
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, views, response, status
 from movies.models import Movie
 from reviews.models import Review
-from movies.serializers import MovieSerializer
+from movies.serializers import MovieSerializer, MovieListDetailSerializer
 from app.permissions import GlobalDefaultPermission
 
 
@@ -13,22 +12,30 @@ class MovieListCreateView(generics.ListCreateAPIView):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
-    def get(self, request):
-        movies = Movie.objects.all()
-        search = request.GET.get('search')  # search?=NeedForSpeed
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return MovieListDetailSerializer
+        return MovieSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()  # Usa o queryset padrão
+        search = self.request.GET.get('search')  # Busca por 'search?=NeedForSpeed'
 
         if search:
-            movies = Movie.objects.filter(title__icontains=search)
+            queryset = queryset.filter(title__icontains=search)  # Filtra se houver 'search'
 
-        serializer = MovieSerializer(movies, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return queryset
 
 
 class MovieRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return MovieListDetailSerializer
+        return MovieSerializer
 
 
 # É o tipo de view mais genérico, da libertdade de escrever seus próprios métodos
